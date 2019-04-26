@@ -1,14 +1,31 @@
 # nexmo_verify
 
-A new Flutter plugin.
+A Nexmo Verify Rest API Flutter plugin.
 
-## Getting Started
+## How can use it?
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.io/developing-packages/),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+# 1. Create instance of Nexmo API handler and put apiKey and apiSecret. After that implement callbacks methods.
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+```
+ NexmoSmsVerificationUtil _nexmoSmsVerificationUtil = NexmoSmsVerificationUtil();
+    _nexmoSmsVerificationUtil.initNexmo("apiKey", "apiSecret");
+    _nexmoSmsVerificationUtil.addCallback(this);
+```y
+
+# 2. Send otp to mobile number.
+
+```
+_nexmoSmsVerificationUtil
+          .sendOtp(_teCountryCode.text + _teMobileNumber.text, "Flutter")
+          .then((dynamic res) {
+        nexmoSuccess((res as BaseModel).nexmoResponse);
+      });
+```y
+
+# 3. Verify otp.
+
+```
+_nexmoSmsVerificationUtil
+          .verifyOtp("OTP")
+          .then((dynamic res) {});
+```y

@@ -60,7 +60,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreenState> {
     startTimer();
 
     _nexmoSmsVerificationUtil = NexmoSmsVerificationUtil();
-    _nexmoSmsVerificationUtil.initNexmo("69b6b0a6", "ad7142edeb933067");
+     _nexmoSmsVerificationUtil.initNexmo("apiKey", "apiSecret");
   }
 
   void checkFiled(TextEditingController teOtpDigitOne) {
