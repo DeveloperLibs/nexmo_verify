@@ -1,236 +1,163 @@
 import 'package:flutter/material.dart';
 import 'package:nexmo_verify/nexmo_sms_verify.dart';
-import 'package:nexmo_verify_example/count/countdown_base.dart';
-import 'package:nexmo_verify_example/widgets/custom_button.dart';
-import 'package:nexmo_verify_example/widgets/custom_text_field.dart';
-import 'package:nexmo_verify_example/widgets/progress_hud.dart';
+import 'package:nexmo_verify_example/countdown_base.dart';
+import 'package:nexmo_verify_example/custom_text_field.dart';
+import 'package:nexmo_verify_example/progress_hud.dart';
 
 class OtpVerificationScreenState extends StatefulWidget {
+  String mobileNumber;
+
+  OtpVerificationScreenState(this.mobileNumber);
 
   @override
-  _OtpVerificationScreenState createState() => _OtpVerificationScreenState();
-
+  _OtpVerificationScreenState createState() =>
+      _OtpVerificationScreenState(mobileNumber);
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreenState> {
-
   bool _isLoading = false;
   bool _isResendEnable = false;
-  final _formKey = new GlobalKey<FormState>();
-  final _scaffoldKey = new GlobalKey<ScaffoldState>();
+
+  final _formKey = GlobalKey<FormState>();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   String otpWaitTimeLabel = "";
   bool _isMobileNumberEnter = false;
+  String mobileNumber;
 
   final _teOtpDigitOne = TextEditingController();
   final _teOtpDigitTwo = TextEditingController();
   final _teOtpDigitThree = TextEditingController();
   final _teOtpDigitFour = TextEditingController();
 
-  FocusNode _focusNodeDigitOne = new FocusNode();
-  FocusNode _focusNodeDigitTwo = new FocusNode();
-  FocusNode _focusNodeDigitThree = new FocusNode();
-  FocusNode _focusNodeDigitFour = new FocusNode();
-
-  CustomButton _customButton;
+  FocusNode _focusNodeDigitOne = FocusNode();
+  FocusNode _focusNodeDigitTwo = FocusNode();
+  FocusNode _focusNodeDigitThree = FocusNode();
+  FocusNode _focusNodeDigitFour = FocusNode();
 
   NexmoSmsVerificationUtil _nexmoSmsVerificationUtil;
 
-  static const TextStyle linkStyle = const TextStyle(
-    color: const Color(0xFF8C919E),
-    fontWeight: FontWeight.bold,
-  );
+  _OtpVerificationScreenState(this.mobileNumber);
 
   @override
   void initState() {
     super.initState();
-    _customButton = new CustomButton();
     changeFocusListener(_teOtpDigitOne, _focusNodeDigitTwo);
     changeFocusListener(_teOtpDigitTwo, _focusNodeDigitThree);
     changeFocusListener(_teOtpDigitThree, _focusNodeDigitFour);
 
-    removeDigitListener(_teOtpDigitOne, _focusNodeDigitOne);
-    removeDigitListener(_teOtpDigitTwo, _focusNodeDigitTwo);
-    removeDigitListener(_teOtpDigitThree, _focusNodeDigitThree);
-    removeDigitListener(_teOtpDigitFour, _focusNodeDigitFour);
-
-    checkFiled(_teOtpDigitOne);
-    checkFiled(_teOtpDigitTwo);
-    checkFiled(_teOtpDigitThree);
-    checkFiled(_teOtpDigitFour);
     startTimer();
 
     _nexmoSmsVerificationUtil = NexmoSmsVerificationUtil();
-     _nexmoSmsVerificationUtil.initNexmo("apiKey", "apiSecret");
+    _nexmoSmsVerificationUtil.initNexmo("apiKey", "apiSecret");
   }
 
-  void checkFiled(TextEditingController teOtpDigitOne) {
-    teOtpDigitOne.addListener(() {
-      if (!teOtpDigitOne.text.isEmpty &&
-          !_teOtpDigitTwo.text.isEmpty &&
-          !_teOtpDigitThree.text.isEmpty &&
-          !_teOtpDigitFour.text.isEmpty) {
-        _isMobileNumberEnter = true;
-      } else {
-        _isMobileNumberEnter = false;
-      }
-      setState(() {});
-    });
-  }
+  bool isVerified = false;
 
   void _submit() {
     if (_isMobileNumberEnter) {
+      showLoader();
       _nexmoSmsVerificationUtil
           .verifyOtp(_teOtpDigitOne.text +
-              _teOtpDigitTwo.text +
-              _teOtpDigitThree.text +
-              _teOtpDigitFour.text)
-          .then((dynamic res) {});
+          _teOtpDigitTwo.text +
+          _teOtpDigitThree.text +
+          _teOtpDigitFour.text)
+          .then((dynamic res) {
+        closeLoader();
+        setState(() {
+          isVerified = true;
+        });
+
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    var msg = new RichText(
-      textAlign: TextAlign.center,
-      text: new TextSpan(
-        children: <TextSpan>[
-          const TextSpan(text: 'Enter one time password ('),
-          new TextSpan(
-            text: 'OTP',
-          ),
-          const TextSpan(
-            text: ') sent via ',
-          ),
-          new TextSpan(
-            text: 'SMS',
-          ),
-        ],
-      ),
-    );
-
-    var otpBox = new Padding(
+    var otpBox = Padding(
         padding: EdgeInsets.only(left: 80.0, right: 80.0),
-        child: new Row(
+        child: Row(
           children: <Widget>[
-            new Padding(padding: EdgeInsets.only(left: 10.0)),
-            new CustomTextField(
-                    inputBoxController: _teOtpDigitOne,
-                    focusNod: _focusNodeDigitOne,
-                    keyBoardType: TextInputType.number,
-                    textColor: 0xFFA6A6A6,
-                    textSize: 14.0,
-                    textFont: "Nexa_Bold",
-                    maxLength: 1,
-                    textAlign: TextAlign.center)
-                .textField("", ""),
-            new Padding(padding: EdgeInsets.only(left: 10.0)),
-            new CustomTextField(
-                    inputBoxController: _teOtpDigitTwo,
-                    focusNod: _focusNodeDigitTwo,
-                    keyBoardType: TextInputType.number,
-                    textColor: 0xFFA6A6A6,
-                    textSize: 14.0,
-                    textFont: "Nexa_Bold",
-                    maxLength: 1,
-                    textAlign: TextAlign.center)
-                .textField("", ""),
-            new Padding(padding: EdgeInsets.only(left: 10.0)),
-            new CustomTextField(
-                    inputBoxController: _teOtpDigitThree,
-                    focusNod: _focusNodeDigitThree,
-                    keyBoardType: TextInputType.number,
-                    textColor: 0xFFA6A6A6,
-                    textSize: 14.0,
-                    textFont: "Nexa_Bold",
-                    maxLength: 1,
-                    textAlign: TextAlign.center)
-                .textField("", ""),
-            new Padding(padding: EdgeInsets.only(left: 10.0)),
-            new CustomTextField(
-                    inputBoxController: _teOtpDigitFour,
-                    focusNod: _focusNodeDigitFour,
-                    keyBoardType: TextInputType.number,
-                    textColor: 0xFFA6A6A6,
-                    textSize: 14.0,
-                    textFont: "Nexa_Bold",
-                    maxLength: 1,
-                    textAlign: TextAlign.center)
-                .textField("", ""),
+            inputBox(_teOtpDigitOne, _focusNodeDigitOne),
+            SizedBox(
+              width: 10.0,
+            ),
+            inputBox(_teOtpDigitTwo, _focusNodeDigitTwo),
+            SizedBox(
+              width: 10.0,
+            ),
+            inputBox(_teOtpDigitThree, _focusNodeDigitThree),
+            SizedBox(
+              width: 10.0,
+            ),
+            inputBox(_teOtpDigitFour, _focusNodeDigitFour),
           ],
         ));
 
-    var form = new Column(
+    var form = Column(
       children: <Widget>[
-        new Container(
+        Container(
           alignment: FractionalOffset.center,
           margin: EdgeInsets.fromLTRB(10.0, 150.0, 10.0, 0.0),
-          decoration: new BoxDecoration(
-            color: const Color(0xFFF9F9F9),
-            borderRadius: new BorderRadius.only(
-                topLeft: const Radius.circular(6.0),
-                topRight: const Radius.circular(6.0)),
+          decoration: BoxDecoration(
+            color: Color(0xFFF9F9F9),
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(6.0), topRight: Radius.circular(6.0)),
           ),
-          child: new Column(
+          child: Column(
             children: <Widget>[
-              new Container(
+              Container(
                 alignment: FractionalOffset.center,
                 padding: EdgeInsets.fromLTRB(10.0, 20.0, 10.0, 50.0),
-                decoration: new BoxDecoration(
-                  color: const Color.fromRGBO(255, 255, 255, 1.0),
-                  border: Border.all(color: const Color(0x33A6A6A6)),
-                  borderRadius: new BorderRadius.only(
-                      topLeft: const Radius.circular(6.0),
-                      topRight: const Radius.circular(6.0)),
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(255, 255, 255, 1.0),
+                  border: Border.all(color: Color(0x33A6A6A6)),
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(6.0),
+                      topRight: Radius.circular(6.0)),
                 ),
-                child: new Form(
+                child: Form(
                   key: _formKey,
-                  child: new Column(
+                  child: Column(
                     children: <Widget>[
-                      new SizedBox(
+                      SizedBox(
                         width: 0.0,
                         height: 30.0,
                       ),
-                      new Text(
+                      Text(
                         "OTP VERIFICATION",
                       ),
-                      new Padding(
-                        padding: EdgeInsets.fromLTRB(70.0, 20.0, 70.0, 10.0),
-                        child: msg,
-                      ),
-                      new SizedBox(
+                      SizedBox(
                         width: 0.0,
                         height: 20.0,
                       ),
-                      new Text(
+                      Text(
                         "OTP",
                       ),
                       otpBox,
-                      new SizedBox(
+                      SizedBox(
                         width: 0.0,
                         height: 20.0,
                       ),
-                      new Text(
+                      Text(
                         otpWaitTimeLabel,
                       ),
-                      new GestureDetector(
-                        onTap: () {
-                          _resendOtp();
-                        },
-                        child: new Container(
-                          margin: EdgeInsets.fromLTRB(70.0, 0.0, 70.0, 0.0),
-                          child: _isResendEnable
-                              ? _customButton.buttonMedium(
-                                  "RESEND OTP",
-                                  EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
-                                  Colors.blueGrey,
-                                  const Color(0xFF28324E),
-                                  10.0)
-                              : _customButton.buttonMedium(
-                                  "RESEND OTP",
-                                  EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
-                                  Colors.blue,
-                                  const Color(0xFF28324E),
-                                  10.0),
+                      SizedBox(
+                        width: 0.0,
+                        height: 10.0,
+                      ),
+                      RaisedButton(
+                        color: Color(0xFFFFA600),
+                        onPressed: _submit,
+                        shape: RoundedRectangleBorder(
+                            borderRadius:
+                            BorderRadius.all(Radius.circular(40))),
+                        child: Text(
+                          "SUBMIT",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color(0xFFFFFFFF),
+                          ),
                         ),
                       ),
                     ],
@@ -240,67 +167,59 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreenState> {
             ],
           ),
         ),
-        new GestureDetector(
-          onTap: () {
-            _submit();
-          },
-          child: new Container(
-            margin: EdgeInsets.fromLTRB(10.0, 0.0, 10.0, 20.0),
-            child: _isMobileNumberEnter
-                ? _customButton.buttonWithColorBg(
-                    "NEXT",
-                    EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
-                    const Color(0xFFFFD900),
-                    const Color(0xFF28324E))
-                : _customButton.getAppBorderButton(
-                    "NEXT",
-                    EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 0.0),
-                  ),
+        Padding(
+          padding: EdgeInsets.only(top: 20.0),
+          child: RaisedButton(
+            color: Color(0xFFFFA600),
+            onPressed: _resendOtp,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(40))),
+            child: Text("RESEND OTP",
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Color(0xFFFFFFFF),
+                )),
           ),
-        ),
+        )
       ],
     );
 
-    var screenRoot = new Container(
-      child: new SingleChildScrollView(
-        child: new Stack(
-          children: <Widget>[
-            form,
-          ],
+    return Scaffold(
+      backgroundColor: Color(0xFFF1F1EF),
+      key: _scaffoldKey,
+      body: ProgressHUD(
+        child: Container(
+          child: SingleChildScrollView(
+            child: Stack(
+              children: <Widget>[
+                isVerified
+                    ? Container(
+                    height: 200.0,
+                    alignment: FractionalOffset.center,
+                    margin: EdgeInsets.fromLTRB(10.0, 150.0, 10.0, 0.0),
+                    decoration: BoxDecoration(
+                      color: Color(0xFFF9F9F9),
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(6.0),
+                          topRight: Radius.circular(6.0)),
+                    ),
+                    child: Text(
+                      "Verified: " + mobileNumber,
+                      style: TextStyle(fontSize: 16.0, color: Colors.blue),
+                    ))
+                    : form
+              ],
+            ),
+          ),
         ),
+        inAsyncCall: _isLoading,
       ),
     );
-
-    return new WillPopScope(
-        onWillPop: () async {
-          print("back");
-          return true;
-        },
-        child: new Scaffold(
-          backgroundColor: const Color(0xFFF1F1EF),
-          appBar: null,
-          key: _scaffoldKey,
-          body: ProgressHUD(
-            child: screenRoot,
-            inAsyncCall: _isLoading,
-            opacity: 0.0,
-          ),
-        ));
   }
 
   @override
   void onLoginError(String errorTxt) {
     setState(() => _isLoading = false);
-  }
-
-  void removeDigitListener(
-      TextEditingController controller, FocusNode focusNode) {
-//    focusNode.addListener(() {
-//      if (controller.text.length > 0 && controller != null) {
-//        controller.text = "";
-//      }
-//      setState(() {});
-//    });
   }
 
   void changeFocusListener(
@@ -325,17 +244,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreenState> {
 
   void _resendOtp() {
     if (_isResendEnable) {
-//      _presenter.sendRequestOtp(userSignUpInfo.mobile);
+      _nexmoSmsVerificationUtil.resentOtp();
     }
-  }
-
-  @override
-  void moveToReferralScreen() {
-//    new AnimationUtil().slideAnim(
-//        ReferralScreen(userSignUpInfo: userSignUpInfo),
-//        context,
-//        false,
-//        RouteSettings(name: "/ReferralScreen"));
   }
 
   void startTimer() {
@@ -343,7 +253,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreenState> {
       _isResendEnable = false;
     });
 
-    var sub =  CountDown(new Duration(minutes: 5)).stream.listen(null);
+    var sub = CountDown(new Duration(minutes: 5)).stream.listen(null);
 
     sub.onData((Duration d) {
       setState(() {
@@ -364,11 +274,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreenState> {
     startTimer();
   }
 
-  @override
-  void mobileVerified() {
-    moveToReferralScreen();
+  Widget inputBox(
+      TextEditingController teOtpDigitOne, FocusNode focusNodeDigitOne) {
+    return CustomTextField(
+        inputBoxController: teOtpDigitOne,
+        focusNod: focusNodeDigitOne,
+        keyBoardType: TextInputType.number,
+        textColor: 0xFFA6A6A6,
+        textSize: 14.0,
+        textFont: "Nexa_Bold",
+        maxLength: 1,
+        textAlign: TextAlign.center)
+        .textField("", "");
   }
-
-  @override
-  void showAlert(String msg) {}
 }
